@@ -1,0 +1,90 @@
+# TODO: továbbfejlesztési lehetőség – a pipeline lépések kiszervezhetők GitLab CI/CD Components-be,
+# így más projektek is újrahasználhatják a build/scan/push logikát include-dal.
+# Monolit alkalmazásnál nem, de mikroszerviz architektúránál éri meg igazán, 
+# ahol több repo osztozik ugyanazon a pipeline logikán.
+# https://docs.gitlab.com/ee/ci/components/
+
+stages:
+  - build
+  - scan
+  - push
+  - deploy
+
+variables:
+  DEPLOY_ENV:
+    value: "dev"
+    options:
+      - "dev"
+      - "uat"
+      - "staging"
+      - "prod"
+    description: "Deploy target environment"
+  APP_DIR: k8s/modules/image-processor/app
+  ECR_REGISTRY: 123456789.dkr.ecr.eu-central-1.amazonaws.com
+  IMAGE_NAME: image-processor
+  IMAGE_TAG: $ECR_REGISTRY/$IMAGE_NAME:$CI_COMMIT_SHA
+  IMAGE_TAG_LATEST: $ECR_REGISTRY/$IMAGE_NAME:latest
+
+.aws_login: &aws_login
+  before_script:
+    - aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin $ECR_REGISTRY
+
+maven-build:
+  stage: build
+  image: maven:3.9-eclipse-temurin-21
+  script:
+    - cd $APP_DIR && mvn package -DskipTests -q
+  artifacts:
+    paths:
+      - $APP_DIR/target/*.jar
+    expire_in: 1 hour
+  cache:
+    key: maven-$CI_COMMIT_REF_SLUG
+    paths:
+      - .m2/repository
+
+docker-build:
+  stage: build
+  image: docker:24
+  services:
+    - docker:24-dind
+  needs: [maven-build]
+  script:
+    - docker build -t $IMAGE_TAG -t $IMAGE_TAG_LATEST $APP_DIR
+  dependencies:
+    - maven-build
+
+trivy-scan:
+  stage: scan
+  image:
+    name: aquasec/trivy:latest
+    entrypoint: [""]
+  needs: [docker-build]
+  script:
+    - trivy image --exit-code 1 --severity HIGH,CRITICAL $IMAGE_TAG
+  allow_failure: false
+
+push-ecr:
+  stage: push
+  image: docker:24
+  services:
+    - docker:24-dind
+  <<: *aws_login
+  needs: [trivy-scan]
+  script:
+    - docker push $IMAGE_TAG
+    - docker push $IMAGE_TAG_LATEST
+  only:
+    - main
+    - develop
+
+deploy:
+  stage: deploy
+  image: alpine/helmfile:latest
+  needs: [push-ecr]
+  script:
+    - helmfile -e $DEPLOY_ENV -f k8s/modules/image-processor/helmfile.yaml apply
+  rules:
+    - when: manual
+  environment:
+    name: $DEPLOY_ENV
