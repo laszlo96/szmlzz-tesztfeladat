@@ -1,0 +1,12 @@
+repositories:
+  - name: cnpg
+    url: https://cloudnative-pg.github.io/charts
+
+releases:
+  - name: cnpg-cluster
+    namespace: cnpg-{{ .Environment.Name }}
+    createNamespace: true
+    chart: cnpg/cluster
+    version: "0.3.0"
+    values:
+      - values/{{ .Environment.Name }}/postgresql.yaml

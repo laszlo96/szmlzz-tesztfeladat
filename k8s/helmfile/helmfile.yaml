@@ -1,0 +1,11 @@
+environments:
+  dev: {}
+  uat: {}
+  staging: {}
+  prod: {}
+
+helmfiles:
+  - path: operator.helmfile.yml
+  - path: postgresql.helmfile.yml
+  # Uncomment during PG13 → PG17 migration only
+  # - path: postgresql-v17.helmfile.yml

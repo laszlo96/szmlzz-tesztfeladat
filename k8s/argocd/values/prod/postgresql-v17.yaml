@@ -1,0 +1,52 @@
+cluster:
+  imageName: ghcr.io/cloudnative-pg/postgresql:17.4
+  instances: 3
+
+  bootstrap:
+    initdb:
+      database: mydb
+      owner: myapp
+      postInitApplicationSQL:
+        - >
+          CREATE SUBSCRIPTION pg13_sub
+          CONNECTION 'host=cnpg-cluster-rw.cnpg-prod.svc.cluster.local
+          port=5432 dbname=mydb user=postgres sslmode=require'
+          PUBLICATION all_tables;
+
+  storage:
+    size: 100Gi
+    storageClass: gp3
+
+  resources:
+    requests:
+      cpu: 1000m
+      memory: 2Gi
+    limits:
+      cpu: 4000m
+      memory: 8Gi
+
+  affinity:
+    enablePodAntiAffinity: true
+    topologyKey: kubernetes.io/hostname
+
+  monitoring:
+    enabled: true
+
+  backup:
+    enabled: true
+    retentionPolicy: "30d"
+    barmanObjectStore:
+      destinationPath: s3://my-bucket/cnpg/prod-v17
+      s3Credentials:
+        accessKeyId:
+          name: cnpg-s3-secret
+          key: ACCESS_KEY_ID
+        secretAccessKey:
+          name: cnpg-s3-secret
+          key: ACCESS_SECRET_KEY
+      wal:
+        compression: gzip
+        encryption: AES256
+
+  superuserSecret:
+    name: cnpg-superuser-secret

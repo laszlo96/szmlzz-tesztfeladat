@@ -1,0 +1,27 @@
+cluster:
+  imageName: ghcr.io/cloudnative-pg/postgresql:13.20
+  instances: 1
+
+  postgresql:
+    parameters:
+      max_connections: "100"
+      shared_buffers: "128MB"
+      work_mem: "4MB"
+
+  storage:
+    size: 10Gi
+    storageClass: gp3
+
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+
+  monitoring:
+    enabled: false
+
+  backup:
+    enabled: false

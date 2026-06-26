@@ -1,0 +1,38 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: cnpg-operator
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - env: dev
+            cluster: https://dev.eks.example.com
+          - env: uat
+            cluster: https://uat.eks.example.com
+          - env: staging
+            cluster: https://staging.eks.example.com
+          - env: prod
+            cluster: https://prod.eks.example.com
+  template:
+    metadata:
+      name: cnpg-operator-{{ env }}
+    spec:
+      project: default
+      source:
+        repoURL: https://cloudnative-pg.github.io/charts
+        chart: cloudnative-pg
+        targetRevision: "0.22.0"
+        helm:
+          valueFiles:
+            - https://raw.githubusercontent.com/your-org/your-repo/HEAD/k8s/argocd/values/{{ env }}/operator.yaml
+      destination:
+        server: "{{ cluster }}"
+        namespace: cnpg-system
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
