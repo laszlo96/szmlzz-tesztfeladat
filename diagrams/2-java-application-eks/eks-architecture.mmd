@@ -1,0 +1,44 @@
+flowchart TD
+    Internet([Internet]) --> ALB
+
+    subgraph AWS["AWS"]
+        subgraph VPC["VPC (10.0.0.0/16)"]
+            ALB[AWS ALB\nIngress Controller]
+
+            subgraph EKS["EKS Cluster"]
+                subgraph OnDemand["On-Demand Node Group\n(t3.large)"]
+                    CNPG[(CNPG\nPostgreSQL)]
+                    Redis[(Redis\nSentinel)]
+                    Kafka[(Kafka\nStrimzi)]
+                end
+
+                subgraph Spot["Spot Node Group\n(t3.medium)"]
+                    App1[image-processor\npod 1]
+                    App2[image-processor\npod 2]
+                    App3[image-processor\npod 3]
+                    HPA[HPA]
+                end
+
+                HPA -.->|scale| App1
+                HPA -.->|scale| App2
+                HPA -.->|scale| App3
+            end
+
+            S3[(S3 Bucket\njpg storage)]
+        end
+    end
+
+    ALB --> App1
+    ALB --> App2
+    ALB --> App3
+
+    App1 & App2 & App3 -->|consume| Kafka
+    App1 & App2 & App3 -->|read/write| CNPG
+    App1 & App2 & App3 -->|cache| Redis
+    App1 & App2 & App3 -->|store jpg| S3
+
+    style OnDemand fill:#fef9c3,stroke:#eab308
+    style Spot fill:#dcfce7,stroke:#22c55e
+    style EKS fill:#dbeafe,stroke:#3b82f6
+    style VPC fill:#f0f9ff,stroke:#0ea5e9
+    style AWS fill:#f8fafc,stroke:#94a3b8
