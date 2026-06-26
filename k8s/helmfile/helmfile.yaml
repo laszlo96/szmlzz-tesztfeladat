@@ -7,5 +7,7 @@ environments:
 helmfiles:
   - path: operator.helmfile.yml
   - path: postgresql.helmfile.yml
+  - path: kubeblocks-operator.helmfile.yml
+  - path: strimzi-operator.helmfile.yml
   # Uncomment during PG13 → PG17 migration only
   # - path: postgresql-v17.helmfile.yml
