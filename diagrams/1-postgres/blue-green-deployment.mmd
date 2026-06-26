@@ -1,0 +1,41 @@
+flowchart TD
+    LB[Load Balancer / K8s Service]
+
+    subgraph blue["Blue (aktív)"]
+        APP1[app1-blue\nPG13-ra mutat]
+        APP2[app2-blue\nPG13-ra mutat]
+        APP3[app3-blue\nPG13-ra mutat]
+    end
+
+    subgraph green["Green (előkészítve)"]
+        APP1G[app1-green\nPG17-re mutat]
+        APP2G[app2-green\nPG17-re mutat]
+        APP3G[app3-green\nPG17-re mutat]
+    end
+
+    subgraph db["Adatbázis réteg"]
+        PG13[(PG13 cluster\ncnpg-cluster-rw)]
+        PG17[(PG17 cluster\ncnpg-cluster-v17-rw)]
+    end
+
+    LB -->|forgalom| APP1
+    LB -->|forgalom| APP2
+    LB -->|forgalom| APP3
+
+    LB -. "cutover után" .-> APP1G
+    LB -. "cutover után" .-> APP2G
+    LB -. "cutover után" .-> APP3G
+
+    APP1 --> PG13
+    APP2 --> PG13
+    APP3 --> PG13
+
+    APP1G --> PG17
+    APP2G --> PG17
+    APP3G --> PG17
+
+    PG13 -->|logikai replikáció| PG17
+
+    style blue fill:#dbeafe,stroke:#3b82f6
+    style green fill:#dcfce7,stroke:#22c55e
+    style db fill:#fef9c3,stroke:#eab308
