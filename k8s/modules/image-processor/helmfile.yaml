@@ -1,0 +1,11 @@
+environments:
+  dev: {}
+  uat: {}
+  staging: {}
+  prod: {}
+
+helmfiles:
+  - path: cnpg-database.helmfile.yml
+  - path: kafka.helmfile.yml
+  - path: redis.helmfile.yml
+  - path: app.helmfile.yml

@@ -1,0 +1,12 @@
+repositories:
+  - name: kubeblocks
+    url: https://apecloud.github.io/helm-charts
+
+releases:
+  - name: redis
+    namespace: redis
+    createNamespace: true
+    chart: kubeblocks/redis
+    version: "0.9.0"
+    values:
+      - values/{{ .Environment.Name }}/redis.yaml

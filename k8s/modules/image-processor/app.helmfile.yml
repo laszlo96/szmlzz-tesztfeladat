@@ -1,0 +1,7 @@
+releases:
+  - name: image-processor
+    namespace: java-app-{{ .Environment.Name }}
+    createNamespace: true
+    chart: ./chart
+    values:
+      - values/{{ .Environment.Name }}/app.yaml

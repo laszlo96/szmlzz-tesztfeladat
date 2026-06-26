@@ -1,0 +1,54 @@
+spring:
+  application:
+    name: image-processor
+  datasource:
+    url: jdbc:postgresql://${DB_HOST}:5432/${DB_NAME}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  data:
+    redis:
+      sentinel:
+        master: ${REDIS_MASTER}
+        nodes: ${REDIS_SENTINELS}
+      password: ${REDIS_PASSWORD}
+      timeout: 2000ms
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+    consumer:
+      group-id: ${app.kafka.group-id}
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "com.example.imageprocessor.kafka"
+  cache:
+    type: redis
+
+app:
+  kafka:
+    topic: ${KAFKA_TOPIC}
+    group-id: ${KAFKA_GROUP_ID}
+  s3:
+    bucket: ${S3_BUCKET}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      group:
+        liveness:
+          include: livenessState
+        readiness:
+          include: readinessState,db,redis

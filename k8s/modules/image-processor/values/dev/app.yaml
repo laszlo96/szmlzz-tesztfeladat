@@ -1,0 +1,44 @@
+replicaCount: 1
+springProfile: dev
+
+image:
+  repository: <ecr-registry>/image-processor
+  tag: latest
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 256Mi
+  limits:
+    cpu: 1000m
+    memory: 512Mi
+
+autoscaling:
+  enabled: false
+
+ingress:
+  enabled: true
+  host: image-processor.dev.example.com
+
+kafka:
+  bootstrapServers: kafka-kafka-bootstrap.kafka.svc.cluster.local:9092
+  topic: image-jobs-dev
+  groupId: image-processor-dev
+
+redis:
+  master: mymaster
+  sentinels: redis-sentinel.redis.svc.cluster.local:26379
+
+db:
+  host: cnpg-cluster-rw.cnpg-dev.svc.cluster.local
+  name: imageprocessor
+  user: imageprocessor
+
+s3:
+  bucket: image-processor-dev
+
+aws:
+  region: eu-central-1
+
+serviceAccount:
+  iamRoleArn: arn:aws:iam::123456789:role/image-processor-dev

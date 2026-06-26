@@ -1,0 +1,7 @@
+releases:
+  - name: imageprocessor-db
+    namespace: cnpg-{{ .Environment.Name }}
+    chart: oci://ghcr.io/cloudnative-pg/charts/cnpg-db
+    version: "0.1.0"
+    values:
+      - values/{{ .Environment.Name }}/cnpg-database.yaml
