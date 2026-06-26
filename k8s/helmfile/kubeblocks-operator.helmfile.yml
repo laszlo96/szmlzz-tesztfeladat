@@ -1,0 +1,12 @@
+repositories:
+  - name: kubeblocks
+    url: https://apecloud.github.io/helm-charts
+
+releases:
+  - name: kubeblocks
+    namespace: kubeblocks-system
+    createNamespace: true
+    chart: kubeblocks/kubeblocks
+    version: "0.9.0"
+    values:
+      - values/{{ .Environment.Name }}/kubeblocks-operator.yaml
