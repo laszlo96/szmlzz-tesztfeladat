@@ -1,0 +1,48 @@
+graph TD
+    subgraph EKS["EKS Cluster"]
+        subgraph app["java-app-prod"]
+            IP["image-processor<br/>(Spring Boot)"]
+            OA["OTel Java Agent<br/>(auto-instrumentation)"]
+        end
+
+        subgraph infra["kafka / redis / cnpg-prod"]
+            KA["Kafka<br/>(Strimzi JMX exporter)"]
+            RD["Redis<br/>(redis-exporter)"]
+            PG["PostgreSQL<br/>(CNPG /metrics)"]
+        end
+
+        subgraph monitoring["monitoring namespace"]
+            OC["OTel Collector<br/>(DaemonSet)"]
+            KSM["kube-state-metrics"]
+            NE["node-exporter<br/>(DaemonSet)"]
+        end
+
+        subgraph mcp["mcp-server namespace"]
+            MCP["MCP Server<br/>(Python)"]
+        end
+    end
+
+    subgraph AWS["AWS"]
+        OS["Amazon OpenSearch Service<br/>(logok + metrikák + trace-ek)"]
+        OSD["OpenSearch Dashboards<br/>(vizualizáció + alerting)"]
+        SNS["Amazon SNS"]
+        CW["CloudWatch<br/>(EKS control plane)"]
+    end
+
+    OA -->|instrument| IP
+    IP -->|OTLP gRPC<br/>logs + traces| OC
+    KA -->|scrape| OC
+    RD -->|scrape| OC
+    PG -->|scrape| OC
+    KSM -->|scrape| OC
+    NE -->|scrape| OC
+    CW -->|CloudWatch Logs| OC
+
+    OC -->|elasticsearch exporter<br/>logs + metrics + traces| OS
+
+    OS --- OSD
+    OSD -->|alert| SNS
+    SNS -->|notify| SL["Slack / PagerDuty"]
+
+    MCP -->|REST _search<br/>olvasás| OS
+    DEV["Fejlesztő<br/>(Claude)"] -->|natural language| MCP
