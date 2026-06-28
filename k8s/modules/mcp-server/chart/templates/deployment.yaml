@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-server
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mcp-server
+  template:
+    metadata:
+      labels:
+        app: mcp-server
+    spec:
+      serviceAccountName: mcp-server
+      containers:
+        - name: mcp-server
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          env:
+            - name: OPENSEARCH_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: mcp-server-config
+                  key: OPENSEARCH_URL
+            - name: OPENSEARCH_INDEX_LOGS
+              valueFrom:
+                configMapKeyRef:
+                  name: mcp-server-config
+                  key: OPENSEARCH_INDEX_LOGS
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            readOnlyRootFilesystem: true
+          livenessProbe:
+            exec:
+              command: ["python", "-c", "import main"]
+            initialDelaySeconds: 10
+            periodSeconds: 30
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mcp-server-config
+  namespace: {{ .Values.namespace }}
+data:
+  OPENSEARCH_URL: {{ .Values.opensearch.url }}
+  OPENSEARCH_INDEX_LOGS: {{ .Values.opensearch.indexLogs }}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: mcp-server
+  namespace: {{ .Values.namespace }}
+  annotations:
+    eks.amazonaws.com/role-arn: {{ .Values.iamRoleArn }}

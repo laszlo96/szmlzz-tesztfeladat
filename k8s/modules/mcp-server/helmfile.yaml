@@ -1,0 +1,13 @@
+environments:
+  dev: {}
+  uat: {}
+  staging: {}
+  prod: {}
+
+releases:
+  - name: mcp-server
+    namespace: mcp-server
+    createNamespace: true
+    chart: ./chart
+    values:
+      - values/{{ .Environment.Name }}.yaml

@@ -1,0 +1,11 @@
+namespace: mcp-server
+
+image:
+  repository: 123456789.dkr.ecr.eu-central-1.amazonaws.com/mcp-server
+  tag: latest
+
+iamRoleArn: arn:aws:iam::123456789:role/mcp-server-prod
+
+opensearch:
+  url: https://OPENSEARCH_ENDPOINT
+  indexLogs: logs-app-*
