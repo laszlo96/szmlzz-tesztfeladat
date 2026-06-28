@@ -9,5 +9,7 @@ helmfiles:
   - path: postgresql.helmfile.yml
   - path: kubeblocks-operator.helmfile.yml
   - path: strimzi-operator.helmfile.yml
+  - path: kube-state-metrics.helmfile.yml
+  - path: otel-collector.helmfile.yml
   # Uncomment during PG13 → PG17 migration only
   # - path: postgresql-v17.helmfile.yml
